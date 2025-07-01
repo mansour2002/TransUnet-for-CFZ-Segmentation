@@ -562,17 +562,6 @@ class DecoderCup(nn.Module):
 
 
 
-# This is a placeholder for TransUnet.
-# You would need to copy the actual TransUnet model implementation
-# from your Jupyter Notebook or its original GitHub repository here.
-# Below is a conceptual structure if it's a U-Net with a ViT-like encoder.
-
-# Example placeholder if TransUnet combines a ViT-like encoder with a U-Net decoder.
-# This requires the actual TransUnet implementation from your notebook.
-
-# Based on common TransUnet implementations, it often uses a Vision Transformer
-# as the encoder and a standard U-Net-like decoder.
-# You would need to extract your specific TransUnet class.
 
 # Placeholder for the Vision Transformer part if used:
 @dataclass
