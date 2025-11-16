@@ -7,16 +7,18 @@ import torchmetrics as TM
 from torch.utils.data import DataLoader
 import os
 import time
+import numpy as np
 
 # Import configurations
 from config import (
     PARENT_DIR, IMAGESIZE, CLASSES_TO_TRAIN, BATCH_SIZE,
-    FOLD_NUM, MAX_FOLD, NUM_OF_CLASSES, CLASS_COLORS, CLASS_WEIGHTS
+    FOLD_NUM, MAX_FOLD, NUM_OF_CLASSES, CLASS_COLORS, CLASS_WEIGHTS,
+    CLASSES, SAVE_PATH
 )
 
 # Import data utilities and model
 from data_utils import get_images, train_transforms, valid_transforms, SegmentationDataset
-from model import TransUnet 
+from model import TransUnet, CONFIGS 
 
 def get_device():
     """Return the appropriate device (CUDA or CPU) based on availability."""
@@ -62,11 +64,23 @@ def main():
     print(f"Train DataLoader batches: {len(train_data_loader)}")
     print(f"Valid DataLoader batches: {len(valid_data_loader)}")
 
-   
-    # Example: If your TransUnet uses a specific encoder.
-    model = TransUnet(encoder_name="resnet34", encoder_weights="imagenet", in_channels=3, classes=NUM_OF_CLASSES)
+
+    # Initialize TransUnet model with R50-ViT-B_16 configuration
+    config_vit = CONFIGS['R50-ViT-B_16']
+    vit_patches_size = 16
+    config_vit.n_classes = NUM_OF_CLASSES
+    config_vit.n_skip = 3
+    config_vit.patches.grid = (int(IMAGESIZE / vit_patches_size), int(IMAGESIZE / vit_patches_size))
+
+    model = TransUnet(config_vit, img_size=IMAGESIZE, num_classes=NUM_OF_CLASSES)
     model = to_device(model, device)
     print(f"Model parameters: {get_model_parameters(model)}")
+
+    # Optionally load pretrained weights (if you have them)
+    # pretrained_path = 'path/to/R50+ViT-B_16.npz'
+    # if os.path.exists(pretrained_path):
+    #     model.load_from(weights=np.load(pretrained_path))
+    #     print("Loaded pretrained weights")
 
     # Define loss function and optimizer
     # Use class_weights if defined in config.py
@@ -114,8 +128,11 @@ def main():
         print(f"Epoch {epoch+1}/{num_epochs} - Valid Loss: {avg_valid_loss:.4f}")
 
     print("Training complete.")
-    # You might want to save the model here
+
+    # Save the model
+    os.makedirs(SAVE_PATH, exist_ok=True)
     torch.save(model.state_dict(), os.path.join(SAVE_PATH, "transunet_model.pth"))
+    print(f"Model saved to {os.path.join(SAVE_PATH, 'transunet_model.pth')}")
 
 if __name__ == '__main__':
     # Ensure data is prepared before training

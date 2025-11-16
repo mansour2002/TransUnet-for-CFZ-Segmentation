@@ -68,10 +68,10 @@ def train_transforms(img_size):
     """Transforms/augmentations for training images and masks."""
     train_image_transform = A.Compose([
         A.HorizontalFlip(p=0.5),
-        A.Affine(shear=0.4, mode=cv2.BORDER_REFLECT_101, p=0.3), # Use BORDER_REFLECT_101 for mode=4
+        A.Affine(shear=0.4, mode=cv2.BORDER_REFLECT_101, p=0.3),
         A.RandomBrightnessContrast(brightness_limit=0.3, contrast_limit=0.2, p=1.0),
-        A.ShiftScaleRotate(scale_limit=0.3, rotate_limit=50, shift_limit=0.3, p=1.0),
-        A.PadIfNeeded(min_height=img_size, min_width=img_size, always_apply=True),
+        A.ShiftScaleRotate(scale_limit=0.3, rotate_limit=50, shift_limit=0.3, p=1.0, border_mode=cv2.BORDER_REFLECT_101),
+        A.PadIfNeeded(min_height=img_size, min_width=img_size, always_apply=True, border_mode=cv2.BORDER_REFLECT_101),
         A.Blur(blur_limit=3, p=0.2),
         A.Resize(img_size, img_size, always_apply=True, p=1.0)
     ])

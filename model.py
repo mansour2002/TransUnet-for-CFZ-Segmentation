@@ -3,6 +3,7 @@
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
+import numpy as np
 import timm
 import segmentation_models_pytorch as smp
 from einops import rearrange, repeat
@@ -13,12 +14,16 @@ import copy
 import logging
 import math
 from collections import OrderedDict
+from os.path import join as pjoin
 from torch.nn import CrossEntropyLoss, Dropout, Softmax, Linear, Conv2d, LayerNorm
 from torch.nn.modules.utils import _pair
 from scipy import ndimage
 
 # Import configurations
 from config import NUM_OF_CLASSES, IMAGESIZE
+
+# Initialize logger
+logger = logging.getLogger(__name__)
 
 def get_b16_config():
     """Returns the ViT-B/16 configuration."""
@@ -225,13 +230,6 @@ FC_0 = "MlpBlock_3/Dense_0"
 FC_1 = "MlpBlock_3/Dense_1"
 ATTENTION_NORM = "LayerNorm_0"
 MLP_NORM = "LayerNorm_2"
-
-
-def np2th(weights, conv=False):
-    """Possibly convert HWIO to OIHW."""
-    if conv:
-        weights = weights.transpose([3, 2, 0, 1])
-    return torch.from_numpy(weights)
 
 
 def swish(x):

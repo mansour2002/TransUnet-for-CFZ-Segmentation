@@ -23,53 +23,140 @@ These figures show two representative OCTA images and corresponding manually gen
 ![The CFZ-Net](https://github.com/mansour2002/TransUnet-for-CFZ-Segmentation/blob/main/Figures/Segmentation%202.png?raw=true)
 
 
+## Model Architecture
+
+This implementation uses **TransUnet (R50-ViT-B/16)**, which combines:
+- **ResNet50** as the CNN backbone for feature extraction
+- **Vision Transformer (ViT-B/16)** encoder with 12 transformer layers
+- **U-Net style decoder** with skip connections for precise segmentation
+
+The model segments OCTA images into 5 classes:
+1. Background
+2. Venous Capillary Free Zone (vCFZ)
+3. Vein
+4. Arterial Capillary Free Zone (aCFZ)
+5. Artery
+
 ## Repository Structure
 
 The project is organized into the following key files for better modularity and professionalism:
 
-* `config.py`: Contains all configurable parameters, paths, and hyperparameters.
-* `model.py`: Defines the TransUnet model architecture.
-* `data_utils.py`: Includes utilities for data loading, preprocessing, and augmentation, including the `SegmentationDataset` class.
-* `data_preparation.py`: (Optional) A standalone script for initial data transfer and directory setup. Run this once to prepare your dataset.
-* `train.py`: The main script to execute the training and validation process.
+* [config.py](config.py): Contains all configurable parameters, paths, and hyperparameters
+* [model.py](model.py): Defines the TransUnet model architecture (R50-ViT-B/16)
+* [data_utils.py](data_utils.py): Utilities for data loading, preprocessing, and augmentation
+* [data_preparation.py](data_preparation.py): Standalone script for dataset preparation and preprocessing
+* [train.py](train.py): Main training script with validation loop
+* [notebooks/](notebooks/): Contains the original training notebook with complete pipeline
 
 ## Setup and Usage
 
 ### Dependencies
 
-* PyTorch >= 2.2.1+cu118
-* CUDA >= 11.8
-* Python >= 3.9
-* `segmentation_models_pytorch`
-* `albumentations`
-* `pandas`
-* `opencv-python`
-* `timm`
-* `einops`
-* `ml_collections` (if used by your specific TransUnet implementation)
-* `torchmetrics`
+* Python >= 3.8
+* PyTorch >= 2.0.0
+* CUDA (optional, for GPU acceleration)
 
-You can install the required packages using pip:
+You can install all required packages using pip:
 ```bash
-pip install torch torchvision torchaudio --index-url [https://download.pytorch.org/whl/cu118](https://download.pytorch.org/whl/cu118)
-pip install segmentation_models_pytorch albumentations pandas opencv-python timm einops ml_collections torchmetrics
+pip install -r requirements.txt
+```
+
+For GPU support with CUDA, install PyTorch with CUDA:
+```bash
+pip install torch torchvision torchaudio --index-url https://download.pytorch.org/whl/cu118
 ```
 
 ### Data Preparation
 
-1.  **Update `config.py`**:
-    Before running any scripts, open `config.py` and update `PARENT_DIR` and `SOURCE_DIR` to your local project and raw data paths, respectively.
+1.  **Update Configuration**:
+    Before running any scripts, open [config.py](config.py) and update the following paths:
+    - `PARENT_DIR`: Your project's root directory
+    - `SOURCE_DIR`: Path to your raw OCTA data (if using data_preparation.py)
 
-2.  **Run Data Preparation (Optional, if your data is not already structured)**:
-    Execute `data_preparation.py` to organize your raw OCTA images and CFZ maps into the required input/output structure and generate the `train_data_tmp_Idea61CFZ.csv` file.
+2.  **Prepare Your Dataset** (if not already structured):
+    If you have raw OCTA images that need preprocessing, run:
     ```bash
     python data_preparation.py
+    ```
+    This script will:
+    - Create necessary directory structure
+    - Process and resize OCTA images and CFZ maps
+    - Generate a CSV file with image paths for training
+
+    Expected directory structure after preparation:
+    ```
+    PARENT_DIR/
+    ├── tmp_CFZ/
+    │   └── Dataset/
+    │       └── train/
+    │           ├── Input/      # Processed OCTA images
+    │           └── CFZ_map/    # Ground truth segmentation masks
+    └── train_data_CFZ.csv      # Training metadata
     ```
 
 ### Training
 
-1.  **Start Training**:
-    Once your data is prepared and paths are correctly configured, you can start the training process by running `train.py`:
+1.  **Configure Training Parameters**:
+    Adjust hyperparameters in [config.py](config.py):
+    - `BATCH_SIZE`: Batch size for training (default: 15)
+    - `IMAGESIZE`: Input image size (default: 320)
+    - `FOLD_NUM` and `MAX_FOLD`: Cross-validation settings
+
+2.  **Optional: Download Pretrained Weights**:
+    For better performance, you can use pretrained ViT weights. Download the R50+ViT-B_16 weights and update the path in [train.py](train.py).
+
+3.  **Start Training**:
     ```bash
     python train.py
     ```
+
+    The trained model will be saved to the path specified in `SAVE_PATH` in [config.py](config.py).
+
+### Using the Notebook
+
+For an interactive training experience, you can use the Jupyter notebook:
+```bash
+jupyter notebook notebooks/TransUnet_for_CFZ_Segmentation.ipynb
+```
+This notebook contains the complete pipeline from data preparation to model evaluation.
+
+## Project Structure
+
+```
+TransUnet-for-CFZ-Segmentation/
+├── config.py                 # Configuration and hyperparameters
+├── model.py                  # TransUnet model implementation
+├── data_utils.py            # Data loading and preprocessing utilities
+├── data_preparation.py      # Dataset preparation script
+├── train.py                 # Training script
+├── requirements.txt         # Python dependencies
+├── README.md               # Project documentation
+├── LICENSE.txt             # License information
+├── .gitignore             # Git ignore file
+├── Figures/               # Sample segmentation results
+└── notebooks/             # Jupyter notebooks
+    └── TransUnet_for_CFZ_Segmentation.ipynb
+```
+
+## Citation
+
+If you use this code in your research, please cite the TransUNet paper:
+
+```bibtex
+@article{chen2021transunet,
+  title={TransUNet: Transformers Make Strong Encoders for Medical Image Segmentation},
+  author={Chen, Jieneng and Lu, Yongyi and Yu, Qihang and Luo, Xiangde and Adeli, Ehsan and Wang, Yan and Lu, Le and Yuille, Alan L and Zhou, Yuyin},
+  journal={arXiv preprint arXiv:2102.04306},
+  year={2021}
+}
+```
+
+## License
+
+This project is licensed under the terms specified in [LICENSE.txt](LICENSE.txt).
+
+## Acknowledgments
+
+- TransUNet architecture based on the original implementation
+- OCTA images acquired using AngioVue SD-OCT device (Optovue, Fremont, CA, USA)
+- Built with PyTorch and segmentation_models_pytorch
